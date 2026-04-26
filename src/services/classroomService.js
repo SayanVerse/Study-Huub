@@ -20,3 +20,33 @@ export const getClassroomCourses = async (accessToken) => {
   const data = await res.json();
   return data.courses || [];
 };
+
+export const getClassroomTopics = async (courseId, accessToken) => {
+  const res = await fetch(
+    `${CLASSROOM_API}/courses/${courseId}/topics`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }
+  );
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error?.message || "Failed to fetch Classroom topics");
+  }
+  const data = await res.json();
+  return data.topic || [];
+};
+
+export const getClassroomMaterials = async (courseId, accessToken) => {
+  const res = await fetch(
+    `${CLASSROOM_API}/courses/${courseId}/courseWorkMaterials`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }
+  );
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error?.message || "Failed to fetch Classroom materials");
+  }
+  const data = await res.json();
+  return data.courseWorkMaterial || [];
+};

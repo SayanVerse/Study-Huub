@@ -8,8 +8,6 @@ import {
   serverTimestamp,
   query,
   orderBy,
-  collectionGroup,
-  where,
   getDocs,
 } from "firebase/firestore";
 import { db } from "./firebase";
@@ -39,6 +37,7 @@ export const createNote = (userId, subjectId, folderId, { title, content }) =>
     title,
     content,
     starred: false,
+    starredFolderId: null,
     createdAt: serverTimestamp(),
   });
 
@@ -56,16 +55,44 @@ export const deleteNote = (userId, subjectId, folderId, noteId) =>
 export const toggleStar = (userId, subjectId, folderId, noteId, currentStarred) =>
   updateDoc(
     doc(db, "users", userId, "subjects", subjectId, "folders", folderId, "notes", noteId),
-    { starred: !currentStarred }
+    { starred: currentStarred !== true }  // treats undefined and false the same way
   );
 
 // Fetch all starred notes across all subjects/folders for this user
+// Uses manual traversal to avoid collectionGroup security rule requirements.
 export const getStarredNotes = async (userId) => {
-  // Firestore collectionGroup query - requires index
-  const notesGroup = collectionGroup(db, "notes");
-  const q = query(notesGroup, where("starred", "==", true));
-  const snap = await getDocs(q);
-  return snap.docs
-    .filter((d) => d.ref.path.startsWith(`users/${userId}/`))
-    .map((d) => ({ id: d.id, ...d.data(), _path: d.ref.path }));
+  const starredNotes = [];
+
+  const subjectsSnap = await getDocs(collection(db, "users", userId, "subjects"));
+
+  for (const subjectDoc of subjectsSnap.docs) {
+    const foldersSnap = await getDocs(
+      collection(db, "users", userId, "subjects", subjectDoc.id, "folders")
+    );
+
+    for (const folderDoc of foldersSnap.docs) {
+      const notesSnap = await getDocs(
+        collection(db, "users", userId, "subjects", subjectDoc.id, "folders", folderDoc.id, "notes")
+      );
+
+      for (const noteDoc of notesSnap.docs) {
+        const data = noteDoc.data();
+        if (data.starred === true) {
+          starredNotes.push({
+            id: noteDoc.id,
+            ...data,
+            _path: noteDoc.ref.path,
+          });
+        }
+      }
+    }
+  }
+
+  return starredNotes;
 };
+
+export const updateNoteStarredFolder = (userId, subjectId, folderId, noteId, starredFolderId) =>
+  updateDoc(
+    doc(db, "users", userId, "subjects", subjectId, "folders", folderId, "notes", noteId),
+    { starredFolderId }
+  );

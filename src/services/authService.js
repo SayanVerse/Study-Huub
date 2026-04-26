@@ -9,6 +9,8 @@ import { auth } from "./firebase";
 
 const googleProvider = new GoogleAuthProvider();
 googleProvider.addScope("https://www.googleapis.com/auth/classroom.courses.readonly");
+googleProvider.addScope("https://www.googleapis.com/auth/classroom.topics.readonly");
+googleProvider.addScope("https://www.googleapis.com/auth/classroom.courseworkmaterials.readonly");
 
 export const googleSignIn = async () => {
   const result = await signInWithPopup(auth, googleProvider);

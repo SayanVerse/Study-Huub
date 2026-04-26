@@ -7,6 +7,7 @@ import {
   serverTimestamp,
   query,
   orderBy,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "./firebase";
 
@@ -26,3 +27,6 @@ export const createSubject = (userId, name) =>
 
 export const deleteSubject = (userId, subjectId) =>
   deleteDoc(doc(db, "users", userId, "subjects", subjectId));
+
+export const renameSubject = (userId, subjectId, newName) =>
+  updateDoc(doc(db, "users", userId, "subjects", subjectId), { name: newName });

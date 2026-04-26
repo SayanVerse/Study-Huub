@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { getClassroomCourses } from "../services/classroomService";
+import { getClassroomCourses, getClassroomTopics, getClassroomMaterials } from "../services/classroomService";
 import { createSubject } from "../services/subjectService";
+import { createFolder } from "../services/folderService";
+import { addExternalFile } from "../services/fileService";
 import { useAuth } from "../context/AuthContext";
 import { GraduationCap, X, RefreshCw, Check, AlertCircle } from "lucide-react";
 
@@ -44,11 +46,63 @@ const ClassroomImport = ({ onClose, onImported }) => {
     setImporting(true);
     try {
       const toImport = courses.filter((c) => selected.has(c.id));
-      await Promise.all(
-        toImport.map((c) =>
-          createSubject(currentUser.uid, c.name || c.section || "Untitled Course")
-        )
-      );
+      
+      for (const course of toImport) {
+        // 1. Create Subject for the course
+        const subjectDoc = await createSubject(currentUser.uid, course.name || course.section || "Untitled Course");
+        const subjectId = subjectDoc.id;
+
+        // 2. Fetch topics and materials
+        const [topics, materials] = await Promise.all([
+          getClassroomTopics(course.id, classroomToken).catch(() => []),
+          getClassroomMaterials(course.id, classroomToken).catch(() => [])
+        ]);
+
+        // 3. Create Folders for topics and group materials
+        // If there are materials without a topic, we'll put them in a "General" folder
+        const foldersByTopicId = {};
+        
+        for (const topic of topics) {
+          const folderDoc = await createFolder(currentUser.uid, subjectId, topic.name);
+          foldersByTopicId[topic.topicId] = folderDoc.id;
+        }
+
+        // Add a General folder if needed for materials without topic
+        let generalFolderId = null;
+
+        // 4. Add files for each material
+        for (const material of materials) {
+          const topicId = material.topicId;
+          let targetFolderId = foldersByTopicId[topicId];
+          
+          if (!targetFolderId) {
+            if (!generalFolderId) {
+              const genDoc = await createFolder(currentUser.uid, subjectId, "General");
+              generalFolderId = genDoc.id;
+            }
+            targetFolderId = generalFolderId;
+          }
+
+          // A material can have multiple driveFiles or links
+          const attachments = material.materials || [];
+          for (const att of attachments) {
+            if (att.driveFile) {
+              await addExternalFile(currentUser.uid, subjectId, targetFolderId, {
+                fileName: att.driveFile.driveFile.title || "Untitled Document",
+                fileURL: att.driveFile.driveFile.alternateLink,
+                fileType: "application/pdf", // Simplified assumption for Classroom docs/PDFs
+              });
+            } else if (att.link) {
+              await addExternalFile(currentUser.uid, subjectId, targetFolderId, {
+                fileName: att.link.title || "External Link",
+                fileURL: att.link.url,
+                fileType: "text/uri-list",
+              });
+            }
+          }
+        }
+      }
+
       setDone(true);
       setTimeout(() => {
         onImported?.();

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { X, Plus } from "lucide-react";
 
-const CreateModal = ({ title, placeholder, onConfirm, onClose, loading = false }) => {
-  const [value, setValue] = useState("");
+const CreateModal = ({ title, placeholder, initialValue = "", onConfirm, onClose, loading = false }) => {
+  const [value, setValue] = useState(initialValue);
   const [error, setError] = useState("");
 
   const handleSubmit = (e) => {
@@ -56,15 +56,15 @@ const CreateModal = ({ title, placeholder, onConfirm, onClose, loading = false }
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center gap-2 px-5 py-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium
+              className="flex items-center justify-center min-w-[100px] gap-2 px-5 py-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium
                 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" />
               ) : (
-                <Plus size={15} />
+                <Plus size={15} className="shrink-0" />
               )}
-              Create
+              {initialValue ? "Save" : "Create"}
             </button>
           </div>
         </form>

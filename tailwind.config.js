@@ -1,5 +1,8 @@
+import colors from "tailwindcss/colors";
+
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: "class",
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
@@ -7,9 +10,11 @@ export default {
         sans: ["Inter", "system-ui", "sans-serif"],
       },
       colors: {
-        slate: {
-          950: "#020617",
-        },
+        slate: colors.slate,
+      },
+      borderRadius: {
+        xl: "1.5rem",
+        "2xl": "2rem",
       },
     },
   },

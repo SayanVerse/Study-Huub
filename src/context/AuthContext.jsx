@@ -12,7 +12,7 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
-  const [classroomToken, setClassroomToken] = useState(null);
+  const [classroomToken, setClassroomToken] = useState(() => sessionStorage.getItem("classroomToken"));
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,6 +39,7 @@ export const AuthProvider = ({ children }) => {
   const signInWithGoogle = async () => {
     const { user, accessToken } = await googleSignIn();
     setClassroomToken(accessToken);
+    if (accessToken) sessionStorage.setItem("classroomToken", accessToken);
     return user;
   };
 
@@ -49,6 +50,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     await logOut();
     setClassroomToken(null);
+    sessionStorage.removeItem("classroomToken");
   };
 
   const value = {

@@ -10,25 +10,34 @@ import DashboardPage from "./pages/DashboardPage";
 import SubjectPage from "./pages/SubjectPage";
 import FolderPage from "./pages/FolderPage";
 import NoteEditorPage from "./pages/NoteEditorPage";
-import StarredNotesPage from "./pages/StarredNotesPage";
+import StarredPage from "./pages/StarredPage";
+import StarredFolderView from "./pages/StarredFolderView";
+import TagsPage from "./pages/TagsPage";
 import { useLocation } from "react-router-dom";
 
 const pageTitles = {
   "/dashboard": "Dashboard",
-  "/starred": "Starred Notes",
+  "/starred": "Starred",
+  "/tags": "Tags",
 };
 
 const AppLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
   const title = pageTitles[location.pathname] || "Study Hub";
 
   return (
-    <div className="flex h-screen bg-slate-950 overflow-hidden">
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+    <div className="flex h-screen bg-slate-950 dark:bg-slate-950 overflow-hidden" style={{ backgroundColor: 'var(--bg-app)' }}>
+      <Sidebar 
+        open={sidebarOpen} 
+        onClose={() => setSidebarOpen(false)} 
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+      />
 
       {/* Main content */}
-      <div className="flex flex-col flex-1 lg:ml-64 overflow-y-auto">
+      <div className={`flex flex-col flex-1 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'} overflow-y-auto`}>
         <Navbar
           onMenuClick={() => setSidebarOpen(true)}
           title={title}
@@ -70,7 +79,17 @@ function App() {
         element={
           <ProtectedRoute>
             <AppLayout>
-              <StarredNotesPage />
+              <StarredPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/starred/:starredFolderId"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <StarredFolderView />
             </AppLayout>
           </ProtectedRoute>
         }
@@ -101,6 +120,17 @@ function App() {
           <ProtectedRoute>
             <AppLayout>
               <NoteEditorPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/tags"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <TagsPage />
             </AppLayout>
           </ProtectedRoute>
         }

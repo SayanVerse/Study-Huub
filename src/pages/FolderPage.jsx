@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useNotes } from "../hooks/useNotes";
@@ -33,7 +33,9 @@ const FolderPage = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState("");
+  const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef(null);
+  const dragCounterRef = useRef(0);
 
   const filteredNotes = search
     ? notes.filter((n) =>
@@ -98,6 +100,34 @@ const FolderPage = () => {
     }
   };
 
+  const handleDrop = useCallback(async (e) => {
+    e.preventDefault();
+    dragCounterRef.current = 0;
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    const allowed = ["application/pdf", "image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowed.includes(file.type)) {
+      setUploadError("Only PDF and image files can be dropped here.");
+      return;
+    }
+    setUploading(true);
+    setUploadError("");
+    setUploadProgress(0);
+    try {
+      await uploadFile(currentUser.uid, subjectId, folderId, file, (p) => setUploadProgress(p));
+    } catch (err) {
+      setUploadError("Upload failed: " + err.message);
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+    }
+  }, [currentUser, subjectId, folderId]);
+
+  const handleDragEnter = (e) => { e.preventDefault(); dragCounterRef.current++; setDragOver(true); };
+  const handleDragLeave = (e) => { e.preventDefault(); dragCounterRef.current--; if (dragCounterRef.current === 0) setDragOver(false); };
+  const handleDragOver = (e) => { e.preventDefault(); };
+
   return (
     <div className="flex-1">
       <div className="px-6 pt-6 pb-4">
@@ -155,7 +185,23 @@ const FolderPage = () => {
         </div>
       </div>
 
-      <div className="px-6 pb-6 space-y-8">
+      <div
+        className={`px-6 pb-6 space-y-8 relative ${dragOver ? 'drag-over' : ''}`}
+        onDrop={handleDrop}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+      >
+        {/* Drag over overlay */}
+        {dragOver && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-violet-950/60 backdrop-blur-sm rounded-2xl border-2 border-dashed border-violet-500 pointer-events-none">
+            <div className="w-16 h-16 bg-violet-600/20 rounded-2xl flex items-center justify-center mb-4">
+              <Upload size={32} className="text-violet-400" />
+            </div>
+            <p className="text-violet-300 font-semibold text-lg">Drop to upload</p>
+            <p className="text-violet-400/70 text-sm mt-1">PDF or image files</p>
+          </div>
+        )}
         {/* Notes Section */}
         <section>
           <div className="flex items-center gap-2 mb-3">

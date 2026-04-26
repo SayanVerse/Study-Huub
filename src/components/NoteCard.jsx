@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Star, Trash2, FileText, ChevronRight } from "lucide-react";
 import { toggleStar } from "../services/noteService";
 import { useAuth } from "../context/AuthContext";
+import { getTagColor } from "./TagInput";
 
 const NoteCard = ({ note, subjectId, folderId, onClick, onDelete }) => {
   const { currentUser } = useAuth();
@@ -74,6 +75,20 @@ const NoteCard = ({ note, subjectId, folderId, onClick, onDelete }) => {
         <p className="text-slate-500 text-xs leading-relaxed line-clamp-2 mb-3">
           {preview}
         </p>
+      )}
+
+      {/* Tags */}
+      {note.tags?.length > 0 && (
+        <div className="flex flex-wrap gap-1 mb-2">
+          {note.tags.slice(0, 3).map((tag) => (
+            <span key={tag} className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${getTagColor(tag)}`}>
+              #{tag}
+            </span>
+          ))}
+          {note.tags.length > 3 && (
+            <span className="text-[10px] text-slate-600">+{note.tags.length - 3}</span>
+          )}
+        </div>
       )}
 
       <div className="flex items-center justify-between">
