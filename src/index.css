@@ -140,6 +140,7 @@ mark { background-color: #fef08a; color: #1e293b; border-radius: 2px; padding: 0
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
