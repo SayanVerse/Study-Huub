@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "studyhub-by-sayan"
+  },
+  "targets": {
+    "studyhub-by-sayan": {
+      "hosting": {
+        "studyhuub": [
+          "studyhuub"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
